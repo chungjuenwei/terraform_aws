@@ -1,0 +1,15 @@
+# Ignore SSH keys
+*.pem
+*.pub
+
+# Ignore Terraform state files and backups
+*.tfstate
+*.tfstate.*
+*.backup*
+*.lock*
+
+# Ignore Terraform directories
+.terraform/
+
+# Ignore environment variable files
+*.tfvars

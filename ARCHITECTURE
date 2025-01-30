@@ -1,0 +1,10 @@
+Internet
+|
+| (IGW)
+|
+VPC (10.0.0.0/16)
+├── Public Subnets (10.0.1.0/24, 10.0.2.0/24) - For future web servers
+└── Private Subnets (10.0.101.0/24, 10.0.102.0/24) - RDS Instance
+    └── RDS MySQL
+        ├── Security Group: Allows MySQL access from VPC
+        └── db.t3.micro instance
