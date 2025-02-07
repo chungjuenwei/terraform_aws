@@ -1,0 +1,10 @@
+This is to be used with the provisioned elasticache redis cluster
+
+Run pip install redis, and then run the app.py in python
+
+It should return the results
+
+ubuntu@ip-10-0-1-254:~/tmp/redis$ python3 app.py
+Connected to Redis!
+Stored key 'demo_key' with value 'Hello, ElastiCache!' in Redis.
+Retrieved key 'demo_key' with value 'Hello, ElastiCache!' from Redis.
