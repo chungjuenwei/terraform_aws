@@ -7,9 +7,13 @@
 *.tfstate.*
 *.backup*
 *.lock*
+sns.tf
 
 # Ignore Terraform directories
 .terraform/
+.archived/
 
 # Ignore environment variable files
 *.tfvars
+
+*mTLS/
