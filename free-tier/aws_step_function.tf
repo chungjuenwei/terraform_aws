@@ -36,8 +36,8 @@ resource "aws_iam_role_policy" "step_function_policy" {
 
 # Lambda Function (Python)
 resource "aws_lambda_function" "hello_lambda" {
-  filename      = "./aws_step_function/hello_lambda.zip"   # file to be uploaded
-  function_name = "hello_lambda"    # lambda function name to be created in lambda console
+  filename      = "./aws_step_function/hello_lambda.zip" # file to be uploaded
+  function_name = "hello_lambda"                         # lambda function name to be created in lambda console
   role          = aws_iam_role.lambda_exec_role.arn
   handler       = "lambda_function.lambda_handler" # Python handler format: <python_filename>.<function_name>
   runtime       = "python3.12"
@@ -138,6 +138,6 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
 EOF
 }
 
-output "step_function_arn" {
-  value = aws_sfn_state_machine.sfn_state_machine.id
-}
+# output "aws_step_function_arn" {
+#   value = aws_sfn_state_machine.sfn_state_machine.id
+# }

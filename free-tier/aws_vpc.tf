@@ -16,30 +16,30 @@ module "vpc" {
   # Enable creation of a database subnet group
   create_database_subnet_group = true
 
-  default_network_acl_ingress = [
-    { "action" : "allow",
-      "cidr_block" : local.my_public_ip,
-      "from_port" : 0,
-      "protocol" : "-1",
-      "rule_no" : 100,
-      "to_port" : 0
-    },
-    { "action" : "allow",
-      "cidr_block" : module.vpc.vpc_cidr_block,
-      "from_port" : 0,
-      "protocol" : "-1",
-      "rule_no" : 102,
-      "to_port" : 0
-    }
-    # This is for IPv6, which i am not using
-    # { "action" : "allow",
-    #   "from_port" : 0,
-    #   "ipv6_cidr_block" : "::/0",
-    #   "protocol" : "-1",
-    #   "rule_no" : 103,
-    #   "to_port" : 0
-    # }
-  ]
+  # default_network_acl_ingress = [
+  #   { "action" : "allow",
+  #     "cidr_block" : local.my_public_ip,
+  #     "from_port" : 0,
+  #     "protocol" : "-1",
+  #     "rule_no" : 100,
+  #     "to_port" : 0
+  #   },
+  #   { "action" : "allow",
+  #     "cidr_block" : module.vpc.vpc_cidr_block,
+  #     "from_port" : 0,
+  #     "protocol" : "-1",
+  #     "rule_no" : 102,
+  #     "to_port" : 0
+  #   }
+  #   # This is for IPv6, which i am not using
+  #   # { "action" : "allow",
+  #   #   "from_port" : 0,
+  #   #   "ipv6_cidr_block" : "::/0",
+  #   #   "protocol" : "-1",
+  #   #   "rule_no" : 103,
+  #   #   "to_port" : 0
+  #   # }
+  # ]
 
   # Tags have been added at the provider level
   # tags = {

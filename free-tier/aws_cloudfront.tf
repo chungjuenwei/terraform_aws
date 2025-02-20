@@ -125,11 +125,11 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 
 # Output the CloudFront domain name
-output "cloudfront_domain" {
+output "aws_cloudfront_domain" {
   value = aws_cloudfront_distribution.s3_distribution.domain_name
 }
 
-output "cloudfront_gif_url" {
+output "aws_cloudfront_gif_url" {
   value = "${aws_cloudfront_distribution.s3_distribution.domain_name}/${aws_s3_object.gif_file.key}"
 }
 
