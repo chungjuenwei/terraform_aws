@@ -1,0 +1,67 @@
+# .gitlab-ci.yml
+stages:
+  - validate
+  - plan
+  - apply
+  - destroy
+
+default:
+  image: hashicorp/terraform:latest
+  before_script:
+    - terraform init
+
+# dont put this here
+variables:
+  TF_VAR_my_ip: $MY_IP
+  TF_VAR_redshift_admin_password: $REDSHIFT_ADMIN_PASSWORD
+  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+
+cache:
+  key: terraform
+  paths:
+    - .terraform  # Cache providers for faster runs
+
+terraform_validate:
+  stage: validate
+  script:
+    - terraform validate
+  rules:
+    - if: '$CI_COMMIT_BRANCH'  # Run on all branches
+
+terraform_plan:
+  stage: plan
+  script:
+    - terraform plan -out=tfplan
+  artifacts:
+    paths:
+      - tfplan
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'  # Only on main branch
+
+terraform_apply:
+  stage: apply
+  script:
+    - terraform apply -auto-approve tfplan
+  dependencies:
+    - terraform_plan
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual  # Manual trigger for safety
+
+terraform_destroy:
+  stage: destroy
+  script:
+    - terraform destroy -auto-approve
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual  # Manual trigger for cleanup
+
+
+# How It Works
+# Main Branch: Push to main → validate and plan run automatically.
+# Manual Apply: Approve apply to deploy (e.g., Redshift Serverless, S3 with CSV).
+# Manual Destroy: Trigger destroy to clean up.
+
+# Tips and Enhancements
+# Branch Workflow: Add feature branches (e.g., feature/new-table), running validate and plan but not apply until merged to main.

@@ -1,0 +1,130 @@
+# DMS Replication Instance
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dms_replication_instance
+
+# Simulated PostgreSQL on EC2 (source)
+resource "aws_instance" "postgres_source" {
+  ami           = "ami-0e4b5d31e60c96243"  # Amazon Linux 2
+  instance_type = "t2.micro"
+  subnet_id     = module.vpc.private_subnets[0]
+  vpc_security_group_ids = [aws_security_group.postgres_sg.id]
+  user_data = <<EOF
+#!/bin/bash
+yum update -y
+yum install -y postgresql-server
+postgresql-setup initdb
+systemctl enable postgresql
+systemctl start postgresql
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '${var.postgres_password}';"
+sudo -u postgres psql -c "CREATE DATABASE traffic_logs;"
+sudo -u postgres psql -d traffic_logs -c "CREATE TABLE website_traffic (timestamp TIMESTAMP, page VARCHAR(50), user_id VARCHAR(50), ip_address VARCHAR(15));"
+sed -i 's/#listen_addresses = .*/listen_addresses = '*'/' /var/lib/pgsql/data/postgresql.conf
+echo "host all all 0.0.0.0/0 md5" >> /var/lib/pgsql/data/pg_hba.conf
+systemctl restart postgresql
+EOF
+  tags = { Name = "postgres-source" }
+}
+
+resource "aws_security_group" "postgres_sg" {
+  vpc_id = module.vpc.vpc_id
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [module.vpc.vpc_cidr_block]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Redshift Serverless (target, from your setup)
+resource "aws_redshiftserverless_namespace" "default" {
+  namespace_name       = "my-serverless-namespace"
+  db_name              = "dev"
+  admin_username       = "admin"
+  admin_user_password  = var.redshift_admin_password
+}
+
+# DMS Replication Instance
+resource "aws_dms_replication_instance" "default" {
+  replication_instance_id    = "dms-replication-instance"
+  replication_instance_class = "dms.t3.micro"  # Smallest class
+  allocated_storage          = 20
+  vpc_security_group_ids     = [aws_security_group.dms_sg.id]
+  # subnet_ids                 = module.vpc.private_subnets
+  publicly_accessible        = false
+}
+
+resource "aws_security_group" "dms_sg" {
+  vpc_id = module.vpc.vpc_id
+  ingress {
+    from_port   = 5432  # Postgres
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [module.vpc.vpc_cidr_block]
+  }
+  ingress {
+    from_port   = 5439  # Redshift
+    to_port     = 5439
+    protocol    = "tcp"
+    cidr_blocks = [module.vpc.vpc_cidr_block]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# DMS Source Endpoint (PostgreSQL)
+resource "aws_dms_endpoint" "source" {
+  endpoint_id   = "postgres-source"
+  endpoint_type = "source"
+  engine_name   = "postgres"
+  username      = "postgres"
+  password      = var.postgres_password
+  server_name   = aws_instance.postgres_source.private_ip
+  port          = 5432
+  database_name = "traffic_logs"
+}
+
+# DMS Target Endpoint (Redshift Serverless)
+resource "aws_dms_endpoint" "target" {
+  endpoint_id   = "redshift-target"
+  endpoint_type = "target"
+  engine_name   = "redshift-serverless"
+  username      = "admin"
+  password      = var.redshift_admin_password
+  server_name   = "my-serverless-workgroup.123456789012.ap-southeast-1.redshift-serverless.amazonaws.com" # Placeholder, update after workgroup creation
+  port          = 5439
+  database_name = "dev"
+}
+
+# DMS Replication Task
+resource "aws_dms_replication_task" "default" {
+  replication_task_id      = "postgres-to-redshift-task"
+  replication_instance_arn = aws_dms_replication_instance.default.replication_instance_arn
+  source_endpoint_arn      = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn      = aws_dms_endpoint.target.endpoint_arn
+  migration_type           = "full-load-and-cdc"  # Full load + ongoing replication
+  table_mappings           = jsonencode({
+    "rules": [{
+      "rule-type": "selection",
+      "rule-id": "1",
+      "rule-name": "1",
+      "object-locator": {
+        "schema-name": "public",
+        "table-name": "website_traffic"
+      },
+      "rule-action": "include"
+    }]
+  })
+  replication_task_settings = jsonencode({
+    "TargetMetadata": { "TargetSchema": "" },
+    "Logging": { "EnableLogging": true }
+  })
+}
