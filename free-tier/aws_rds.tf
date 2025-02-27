@@ -1,6 +1,7 @@
 variable "rds_password" {
   description = "Password for RDS"
   type        = string
+  default = "asjdkasfsdjfnksdjfn!ASD"
 }
 
 module "rds" {

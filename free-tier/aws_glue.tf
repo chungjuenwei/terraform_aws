@@ -1,12 +1,16 @@
 # S3 Bucket for Input Data
 resource "aws_s3_bucket" "input_bucket" {
   bucket = "learning-glue-input-2023"  # Ensure this is unique; adjust if needed
-  
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"  # SSE-S3 encryption
-      }
+
+  force_destroy = true   # Allows bucket deletion with contents - good when testing
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "glue_input_bucket" {
+  bucket = aws_s3_bucket.input_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
     }
   }
 }
@@ -15,11 +19,14 @@ resource "aws_s3_bucket" "input_bucket" {
 resource "aws_s3_bucket" "output_bucket" {
   bucket = "learning-glue-output-2023"  # Ensure this is unique; adjust if needed
   
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"  # SSE-S3 encryption
-      }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "glue_output_bucket" {
+  bucket = aws_s3_bucket.output_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
     }
   }
 }
@@ -99,16 +106,16 @@ resource "aws_glue_crawler" "my_crawler" {
   }
 }
 
-# Glue Security Configuration
-resource "aws_glue_security_configuration" "my_security_config" {
-  name = "learning_glue_security_config"
+# # Glue Security Configuration
+# resource "aws_glue_security_configuration" "my_security_config" {
+#   name = "learning_glue_security_config"
 
-  encryption_configuration {
-    cloudwatch_encryption { cloudwatch_encryption_mode = "SSE-KMS" }           # Encrypt logs
-    job_bookmarks_encryption { job_bookmarks_encryption_mode = "CSE-KMS" }    # Encrypt bookmarks
-    s3_encryption { s3_encryption_mode = "SSE-KMS" }                          # Encrypt S3 data
-  }
-}
+#   encryption_configuration {
+#     cloudwatch_encryption { cloudwatch_encryption_mode = "SSE-KMS" }           # Encrypt logs
+#     job_bookmarks_encryption { job_bookmarks_encryption_mode = "CSE-KMS" }    # Encrypt bookmarks
+#     s3_encryption { s3_encryption_mode = "SSE-KMS" }                          # Encrypt S3 data
+#   }
+# }
 
 # Glue ETL Job
 resource "aws_glue_job" "my_etl_job" {
@@ -126,7 +133,7 @@ resource "aws_glue_job" "my_etl_job" {
     "--output_path"  = "s3://${aws_s3_bucket.output_bucket.bucket}/parquet_data"
   }
 
-  security_configuration = aws_glue_security_configuration.my_security_config.name
+  # security_configuration = aws_glue_security_configuration.my_security_config.name
   number_of_workers      = 2    # 2 DPUs for cost-effectiveness
   worker_type            = "G.1X"
 }
