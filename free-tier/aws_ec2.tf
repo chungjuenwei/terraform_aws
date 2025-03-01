@@ -28,16 +28,19 @@ resource "tls_private_key" "user1" {
 resource "local_file" "ubuntu_private_key" {
   content  = tls_private_key.ubuntu.private_key_openssh
   filename = "${path.module}/.ssh/ubuntu.pem"
+  file_permission = "0400"
 }
 
 resource "local_file" "foldersyncuser_private_key" {
   content  = tls_private_key.foldersyncuser.private_key_openssh
   filename = "${path.module}/.ssh/foldersyncuser.pem"
+  file_permission = "0400"
 }
 
 resource "local_file" "user1_private_key" {
   content  = tls_private_key.user1.private_key_openssh
   filename = "${path.module}/.ssh/user1.pem"
+  file_permission = "0400"
 }
 
 # Save the public keys to local files

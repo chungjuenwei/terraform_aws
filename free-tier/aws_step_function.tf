@@ -34,26 +34,44 @@ resource "aws_iam_role_policy" "step_function_policy" {
   })
 }
 
+# Zips the Python code
+data "archive_file" "hello_lambda" {
+  type        = "zip"
+  source_dir  = "${path.module}/aws_step_function/hello_lambda"  # Directory containing your Python code
+  output_path = "${path.module}/aws_step_function/hello_lambda.zip"
+}
+
 # Lambda Function (Python)
 resource "aws_lambda_function" "hello_lambda" {
-  filename      = "./aws_step_function/hello_lambda.zip" # file to be uploaded
+  # filename      = "./aws_step_function/hello_lambda.zip" # file to be uploaded
+  filename      = data.archive_file.hello_lambda.output_path # file to be uploaded
   function_name = "hello_lambda"                         # lambda function name to be created in lambda console
   role          = aws_iam_role.lambda_exec_role.arn
   handler       = "lambda_function.lambda_handler" # Python handler format: <python_filename>.<function_name>
   runtime       = "python3.12"
 
-  source_code_hash = filebase64sha256("./aws_step_function/hello_lambda.zip")
+  # source_code_hash = filebase64sha256("./aws_step_function/hello_lambda.zip")
+  source_code_hash = filebase64sha256(data.archive_file.hello_lambda.output_path)
+}
+
+# Zips the Python code
+data "archive_file" "process_result" {
+  type        = "zip"
+  source_dir  = "${path.module}/aws_step_function/process_result"  # Directory containing your Python code
+  output_path = "${path.module}/aws_step_function/process_result_lambda.zip"
 }
 
 # 2nd Lambda Step
 resource "aws_lambda_function" "process_result_lambda" {
-  filename      = "./aws_step_function/process_result_lambda.zip"
+  # filename      = "./aws_step_function/process_result_lambda.zip"
+  filename      = data.archive_file.process_result.output_path
   function_name = "process_result_lambda"
   role          = aws_iam_role.lambda_exec_role.arn
   handler       = "process_result_lambda.lambda_handler"
   runtime       = "python3.12"
 
-  source_code_hash = filebase64sha256("./aws_step_function/process_result_lambda.zip")
+  # source_code_hash = filebase64sha256("./aws_step_function/process_result_lambda.zip")
+  source_code_hash = filebase64sha256(data.archive_file.process_result.output_path)
 }
 
 resource "aws_iam_role" "lambda_exec_role" {
