@@ -1,0 +1,33 @@
+services:
+  mealie:
+    image: ${mealie_image}
+    container_name: mealie
+    restart: always
+    volumes:
+      - ./mealie-data:/app/data/
+    environment:
+      ALLOW_SIGNUP: "false"
+      PUID: 1000
+      PGID: 1000
+      TZ: America/Anchorage
+    networks:
+      - mealie-net
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./certs:/etc/nginx/certs
+    networks:
+      - mealie-net
+    depends_on:
+      - mealie
+
+networks:
+  mealie-net:
+    driver: bridge

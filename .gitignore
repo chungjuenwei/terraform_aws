@@ -1,6 +1,9 @@
 # Ignore SSH keys
 *.pem
 *.pub
+*.crt
+*.key
+*.pfx
 
 # Ignore Terraform state files and backups
 *.tfstate
@@ -16,4 +19,5 @@ sns.tf
 # Ignore environment variable files
 *.tfvars
 
-*mTLS/
+
+mealie-data/
