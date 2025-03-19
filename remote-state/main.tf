@@ -10,6 +10,18 @@ resource "aws_s3_bucket" "terraform_state" {
   }
 }
 
+# what does adding this do? Does this screw up the terraform service account?
+resource "aws_s3_bucket_server_side_encryption_configuration" "s3_default_key" {
+  bucket = aws_s3_bucket.terraform_state.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      # using Amazon S3 master-key (SSE-S3)
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 resource "aws_s3_bucket_versioning" "terraform_state" {
     bucket = aws_s3_bucket.terraform_state.id
 

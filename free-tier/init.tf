@@ -36,7 +36,7 @@ provider "aws" {
   #   s3 = "https://s3.ap-southeast-1.amazonaws.com"
   # }
 
-  allowed_account_ids = ["864981712604"]
+  allowed_account_ids = ["864981712604"]  
 
   # This one enables a role to do terraform
   # assume_role {

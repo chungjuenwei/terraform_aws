@@ -6,7 +6,7 @@ variable "create_ec2" {
 }
 
 
-## Creates 3 keys: ubuntu, foldersyncuser and user1
+## Creates 3 keys: ubuntu, sftpuser and user1
 
 # Generate SSH keys for each user
 resource "tls_private_key" "ubuntu" {
@@ -14,7 +14,7 @@ resource "tls_private_key" "ubuntu" {
   rsa_bits  = 4096
 }
 
-resource "tls_private_key" "foldersyncuser" {
+resource "tls_private_key" "sftpuser" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
@@ -31,9 +31,9 @@ resource "local_file" "ubuntu_private_key" {
   file_permission = "0400"
 }
 
-resource "local_file" "foldersyncuser_private_key" {
-  content  = tls_private_key.foldersyncuser.private_key_openssh
-  filename = "${path.module}/.ssh/foldersyncuser.pem"
+resource "local_file" "sftpuser_private_key" {
+  content  = tls_private_key.sftpuser.private_key_openssh
+  filename = "${path.module}/.ssh/sftpuser.pem"
   file_permission = "0400"
 }
 
@@ -49,9 +49,9 @@ resource "local_file" "ubuntu_public_key" {
   filename = "${path.module}/.ssh/ubuntu.pub"
 }
 
-resource "local_file" "foldersyncuser_public_key" {
-  content  = tls_private_key.foldersyncuser.public_key_openssh
-  filename = "${path.module}/.ssh/foldersyncuser.pub"
+resource "local_file" "sftpuser_public_key" {
+  content  = tls_private_key.sftpuser.public_key_openssh
+  filename = "${path.module}/.ssh/sftpuser.pub"
 }
 
 resource "local_file" "user1_public_key" {
@@ -146,10 +146,10 @@ data "cloudinit_config" "ec2_config" {
         ssh_authorized_keys:
           - ${tls_private_key.ubuntu.public_key_openssh}
 
-      - name: foldersyncuser
-        shell: /usr/sbin/nologin
+      - name: sftpuser
+        shell: /bin/false
         ssh_authorized_keys:
-          - ${tls_private_key.foldersyncuser.public_key_openssh}
+          - ${tls_private_key.sftpuser.public_key_openssh}
 
       - name: user1
         shell: /bin/bash
@@ -180,19 +180,13 @@ data "cloudinit_config" "ec2_config" {
         PermitRootLogin no
         PasswordAuthentication no
 
-    - path: /etc/ssh/sshd_config.d/foldersyncuser.conf
-      content: |
-        Match User foldersyncuser
-            ChrootDirectory /home/foldersyncuser
-            ForceCommand internal-sftp
-            AllowTcpForwarding no
-            X11Forwarding no
-
     runcmd:
-      # This creates the foldersyncuser directory
-      - bash -c 'mkdir -p /home/foldersyncuser/{pictures,documents,music,videos}'
-      - chown -R foldersyncuser:foldersyncuser /home/foldersyncuser
-      - chmod 755 /home/foldersyncuser
+      - chown root:root /home/sftpuser
+      - chmod 755 /home/sftpuser
+      - bash -c 'mkdir -p /home/sftpuser/{pictures,screenshots,music}'
+      - chown sftpuser:sftpuser /home/sftpuser/pictures /home/sftpuser/screenshots /home/sftpuser/music
+      - if ! grep -q "Match User sftpuser" /etc/ssh/sshd_config; then printf "\nMatch User sftpuser\n    ForceCommand internal-sftp\n    ChrootDirectory /home/sftpuser\n" >> /etc/ssh/sshd_config; fi
+      - systemctl restart ssh
 
       # Configures SSH for Custom Random Port
       - systemctl restart sshd

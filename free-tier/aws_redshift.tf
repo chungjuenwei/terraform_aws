@@ -130,7 +130,7 @@ output "aws_redshift_endpoint" {
 
 # S3 Bucket for Traffic Logs
 resource "aws_s3_bucket" "traffic_logs" {
-  bucket = "my-traffic-logs-bucket-${random_string.bucket_suffix.result}"
+  bucket = "my-redshift-logs-bucket-${random_string.bucket_suffix.result}"
   # Note: Bucket names must be globally unique, so we append a random suffix
 }
 

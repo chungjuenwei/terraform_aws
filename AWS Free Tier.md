@@ -12,7 +12,7 @@ Elasticache - DONE
 ECR - Done
 - step functions - DONE
 
-EFS - Not done
+EFS - DONE
 ELB - Not Done
 
 Want to learn
