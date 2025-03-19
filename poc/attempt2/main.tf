@@ -1,6 +1,6 @@
 module "vpc_subnet_config" {
   source = "../../modules/subnet-services"
-  env_name = "dev"
+  env_name = "prd"
   # to add vpc name
   vpc_cidr      = "10.20.28.0/25"
   service_names = ["s3-interface-endpoint", "service2", "service3"]
@@ -35,6 +35,7 @@ module "vpc_subnet_config" {
           to_port     = 443
           protocol    = "tcp"
           cidr_blocks = ["10.100.38.0/24"]
+          description = "Allow incoming 443 from here"
         }
       ]
     }
@@ -45,6 +46,7 @@ module "vpc_subnet_config" {
         to_port     = 443
         protocol    = "tcp"
         cidr_blocks = ["10.100.38.0/24"]
+        description = "Allow outgoing 443 from here"
       }
     ]
   }

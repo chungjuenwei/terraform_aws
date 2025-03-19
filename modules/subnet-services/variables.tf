@@ -46,6 +46,7 @@ variable "service_sg_ingress_rules" {
     to_port     = number
     protocol    = string
     cidr_blocks = list(string)
+    description = string # Added description field
   })))
   default = {}
 }
@@ -56,6 +57,7 @@ variable "service_sg_egress_rules" {
     to_port     = number
     protocol    = string
     cidr_blocks = list(string)
+    description = string # Added description field
   })))
   default = {}
 }
