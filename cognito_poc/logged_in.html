@@ -1,0 +1,33 @@
+<body>
+    <h1>Congratulations!</h1>
+    <p>You are logged in now</p>
+    <ul id="s3-files"></ul>
+    <a
+        href="https://my-sample-app.auth.ap-southeast-1.amazoncognito.com/logout?client_id=p5t4lrm43hb72apa2d04rtvme&logout_uri=http://localhost:8000/logged_out.html">Log
+        Out</a>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1396.0.min.js"></script>
+    <script>
+        // Configure AWS SDK
+        AWS.config.region = 'ap-southeast-1';
+        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: 'ap-southeast-1:9c043f29-95a6-457d-b842-f9cae0cd81ba',
+            Logins: {
+                'cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_15MtNQkA7': window.location.hash.match(/id_token=([^&]+)/)[1]
+            }
+        });
+
+        // List S3 objects
+        var s3 = new AWS.S3();
+        s3.listObjectsV2({ Bucket: 'my-sample-app-bucket-unique' }, function (err, data) {
+            if (err) console.log(err);
+            else {
+                var fileList = document.getElementById('s3-files');
+                data.Contents.forEach(file => {
+                    var li = document.createElement('li');
+                    li.textContent = file.Key;
+                    fileList.appendChild(li);
+                });
+            }
+        });
+    </script>
+</body>

@@ -1,0 +1,35 @@
+.banner-customizable {
+    background-color: #2c3e50;
+    /* Dark blue header */
+}
+
+.label-customizable {
+    color: #333;
+    /* Dark text for labels */
+    font-family: 'Arial', sans-serif;
+}
+
+.submitButton-customizable {
+    background-color: #3498db;
+    /* Blue button */
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+}
+
+.submitButton-customizable:hover {
+    background-color: #2980b9;
+    /* Darker blue on hover */
+}
+
+.inputField-customizable {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.legalText-customizable {
+    color: #666;
+    /* Gray legal text */
+}
