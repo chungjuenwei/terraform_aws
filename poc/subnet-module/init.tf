@@ -67,6 +67,47 @@ provider "aws" {
   }
 }
 
+provider "aws" {
+  region = "ap-southeast-1"
+  alias  = "account2"
+
+  # This is to force the s3 to use the HTTPS endpoint
+  # endpoints {
+  #   s3 = "https://s3.ap-southeast-1.amazonaws.com"
+  # }
+
+  allowed_account_ids = ["396304922123"]  
+
+  # This one enables a role to do terraform
+  assume_role {
+    role_arn     = "arn:aws:iam::396304922123:role/account2.sbx"
+    session_name = "TerraformSession_Account2"
+  }
+
+  # Force all S3 requests to use HTTPS
+  # s3_use_path_style           = false    # path style is the older, legacy system
+  skip_credentials_validation = false    # Terraform validates AWS credentials during initialization
+  # skip_metadata_api_check     = false    # checks EC2 instance metadata service (IMDS) for IAM credentials
+  # s3_us_east_1_regional_endpoint = "regional"
+
+  default_tags {
+    tags = {
+      Environment = "Sandbox"
+      Department  = "DevOps"
+      Terraform   = "True"
+      Version     = "1"
+      ExtraTags   = "LOLOL"
+      Account     = "2"
+    }
+  }
+
+  # this one ignores the tags which are managed by other services
+  ignore_tags {
+    key_prefixes = ["kubernetes.io/"]
+    keys = ["ManagedBy"]
+  }
+}
+
 # Add to your existing providers
 provider "tls" {}
 

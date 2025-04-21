@@ -1,11 +1,11 @@
 module "vpc_subnet_config" {
   source = "../../modules/subnet-services"
-  env_name = "prd"
+  env_name = "dev"
   # to add vpc name
-  vpc_cidr      = "10.20.28.0/25"
-  service_names = ["s3-interface-endpoint", "service2", "service3"]
+  existing_vpc_id = aws_vpc.main.id # Replace with the actual ID of your existing VPC
+  service_names = ["service1", ] # "s3-interface-endpoint",  "service3"
   service_nacl_rules = {
-    "service2" = [
+    "service1" = [
       # Allow incoming HTTPS (port 443) from 10.100.38.0/24
       {
         protocol   = "tcp"
@@ -29,7 +29,7 @@ module "vpc_subnet_config" {
     ]
   }
     service_sg_ingress_rules = {
-      "service2" = [
+      "service1" = [
         {
           from_port   = 443
           to_port     = 443
@@ -40,7 +40,7 @@ module "vpc_subnet_config" {
       ]
     }
   service_sg_egress_rules = {
-    "service2" = [
+    "service1" = [
       {
         from_port   = 443
         to_port     = 443
@@ -65,3 +65,9 @@ output "service_subnet_ids" {
 
 
 
+resource "aws_vpc" "main" {
+  cidr_block = "10.188.91.0/25"
+  tags = {
+    Name = "poc-vpc"
+  }
+}
