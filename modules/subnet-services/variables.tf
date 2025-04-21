@@ -1,9 +1,4 @@
 # Define input variables
-variable "vpc_cidr" {
-  type        = string
-  description = "The CIDR block for the VPC (e.g., 10.20.28.0/25)"
-}
-
 variable "env_name" {
   type        = string
   description = "Environment name (e.g., 'dev', 'uat', 'prd')"
@@ -24,6 +19,11 @@ variable "az2" {
   type        = string
   description = "Second Availability Zone (e.g., us-east-1b)"
   default = "ap-southeast-1b"
+}
+
+variable "existing_vpc_id" {
+  type        = string
+  description = "ID of the existing VPC to use"
 }
 
 variable "service_nacl_rules" {
