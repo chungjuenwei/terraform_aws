@@ -17,15 +17,6 @@ terraform {
       version = "3.4.5"
     }
   }
-
-  # backend "s3" {
-  #   region       = "ap-southeast-1"  
-  #   bucket       = "terraform-projects-tfstate"    # The name of your bucket
-  #   key          = "terraform.tfstate"        # Prefix for the state file within the bucket
-
-  #   encrypt        = true  # Explicitly enable encryption
-  #   kms_key_id     = null  # Use AES256 (SSE-S3)
-  # }
 }
 
 provider "aws" {

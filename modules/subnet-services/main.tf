@@ -1,17 +1,14 @@
 
-# Create the VPC
-resource "aws_vpc" "main" {
-  cidr_block = var.vpc_cidr
-  tags = {
-    Name = "vpc-main"
-  }
+# Reads existing vpc
+data "aws_vpc" "existing" {
+  id = var.existing_vpc_id
 }
 
 # Local variables for CIDR calculations
 locals {
-  vpc_mask = parseint(split("/", var.vpc_cidr)[1], 10)
+  vpc_mask = parseint(split("/", data.aws_vpc.existing.cidr_block)[1], 10)
   service_27_cidrs = [
-    for i in range(length(var.service_names)) : cidrsubnet(var.vpc_cidr, 27 - local.vpc_mask, i)
+    for i in range(length(var.service_names)) : cidrsubnet(data.aws_vpc.existing.cidr_block, 27 - local.vpc_mask, i)
   ]
   default_nacl_rules = [
     {
@@ -38,7 +35,7 @@ locals {
 # Create first /28 subnet (in az1) for each service
 resource "aws_subnet" "service_a" {
   count             = length(var.service_names)
-  vpc_id            = aws_vpc.main.id
+  vpc_id            = data.aws_vpc.existing.id
   cidr_block        = cidrsubnet(local.service_27_cidrs[count.index], 1, 0) # First /28
   availability_zone = var.az1
   tags = {
@@ -50,7 +47,7 @@ resource "aws_subnet" "service_a" {
 resource "aws_subnet" "service_b" {
   count             = var.env_name == "dev" || var.env_name == "uat" ? 0 : length(var.service_names)
   # count             = length(var.service_names)
-  vpc_id            = aws_vpc.main.id
+  vpc_id            = data.aws_vpc.existing.id
   cidr_block        = cidrsubnet(local.service_27_cidrs[count.index], 1, 1) # Second /28
   availability_zone = var.az2
   tags = {
@@ -61,9 +58,9 @@ resource "aws_subnet" "service_b" {
 # Create a route table for each service
 resource "aws_route_table" "service_rt" {
   count  = length(var.service_names)
-  vpc_id = aws_vpc.main.id
+  vpc_id = data.aws_vpc.existing.id
   tags = {
-    Name = "rt-${var.service_names[count.index]}"
+    Name = "rtb-${var.service_names[count.index]}"
   }
 }
 
@@ -84,7 +81,7 @@ resource "aws_route_table_association" "service_b_assoc" {
 # Create a network ACL for each service with dynamic rules
 resource "aws_network_acl" "service_nacl" {
   count  = length(var.service_names)
-  vpc_id = aws_vpc.main.id
+  vpc_id = data.aws_vpc.existing.id
 
   dynamic "ingress" {
     for_each = [for rule in lookup(var.service_nacl_rules, var.service_names[count.index], local.default_nacl_rules) : rule if rule.direction == "ingress"]
@@ -133,7 +130,7 @@ resource "aws_network_acl_association" "service_b_assoc" {
 resource "aws_security_group" "service_sg" {
   count  = length(var.service_names)
   name   = "sgrp-${var.service_names[count.index]}"
-  vpc_id = aws_vpc.main.id
+  vpc_id = data.aws_vpc.existing.id
 
   dynamic "ingress" {
     for_each = lookup(var.service_sg_ingress_rules, var.service_names[count.index], [])

@@ -1,0 +1,56 @@
+# Variables
+variable "oke_cluster_ip" {
+  default = "213.35.97.155" # Your OKE cluster's public IP
+}
+
+variable "aws_account_id" {
+  default = "YOUR_AWS_ACCOUNT_ID" # Replace with your AWS account ID
+}
+
+# OIDC Provider
+resource "aws_iam_openid_connect_provider" "oke_oidc" {
+  url = "https://${var.oke_cluster_ip}"
+#   url = "https://${var.oke_cluster_ip}:6443"
+
+  client_id_list = [
+    "sts.amazonaws.com" # Required audience for AWS STS
+  ]
+
+  # Thumbprint of the root CA certificate for your OKE cluster's TLS cert
+  thumbprint_list = ["D9C7C5980E9FE5D200A25CD1DCDD36170C9F61A0"] # See below on how to get this
+}
+
+# IAM Role for OKE Service Account
+resource "aws_iam_role" "oke_aws_role" {
+  name = "OKEtoAWSRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.oke_oidc.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${var.oke_cluster_ip}:6443:aud" = "sts.amazonaws.com"
+            "${var.oke_cluster_ip}:6443:sub" = "system:serviceaccount:default:my-sa"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# Attach a policy to the role (e.g., S3 read-only access)
+resource "aws_iam_role_policy_attachment" "s3_read_only" {
+  role       = aws_iam_role.oke_aws_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+
+# Output the role ARN for use in your OKE pod
+output "role_arn" {
+  value = aws_iam_role.oke_aws_role.arn
+}
