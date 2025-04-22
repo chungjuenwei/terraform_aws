@@ -9,6 +9,27 @@ resource "aws_s3_bucket" "data_bucket" {
   }
 }
 
+## Generating Mock Data to add to the s3 bucket
+locals {
+  csv_header = "id,name,age"
+  csv_rows = [
+    for i in range(1, 101) : "${i},Name${i},${20 + (i % 30)}"
+  ]
+  csv_content = join("\n", concat([local.csv_header], local.csv_rows))
+}
+
+resource "local_file" "csv_file" {
+  filename = "${path.module}/mock_data.csv"
+  content  = local.csv_content
+}
+
+resource "aws_s3_object" "upload_csv" {
+  bucket = aws_s3_bucket.data_bucket.bucket
+  key    = "raw/mock_data.csv"
+  source = local_file.csv_file.filename
+}
+
+
 # Kinesis Data Stream
 resource "aws_kinesis_stream" "data_stream" {
   name             = "my-data-stream"

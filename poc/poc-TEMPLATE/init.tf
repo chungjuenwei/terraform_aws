@@ -1,8 +1,3 @@
-locals {
-  poc_number = "006"
-}
-
-
 terraform {
   required_providers {
     aws = {
@@ -20,10 +15,6 @@ terraform {
     http = {
       source = "hashicorp/http"
       version = "3.4.5"
-    }
-    local = {
-      source = "hashicorp/local"
-      version = "2.5.2"
     }
   }
 }
@@ -57,7 +48,6 @@ provider "aws" {
       Terraform   = "True"
       Version     = "1"
       ExtraTags   = "LOLOL"
-      POC         = local.poc_number
     }
   }
 
